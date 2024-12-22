@@ -4,7 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-@TeleOp
+import com.qualcomm.robotcore.hardware.Servo;
+
+ @TeleOp
 public class ClawTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -18,7 +20,7 @@ public class ClawTest extends LinearOpMode {
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRight");
-
+        Servo claw = hardwareMap.servo.get("claw");
         motorLiftForward.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLiftReverse.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -26,8 +28,8 @@ public class ClawTest extends LinearOpMode {
 
         waitForStart();
 
+        claw.setPosition(0);
         if (isStopRequested()) return;
-
         while (opModeIsActive()) {
             if(gamepad1.a){
                 telemetry.addLine("Lift Motor Going Forward");
@@ -55,13 +57,20 @@ public class ClawTest extends LinearOpMode {
             } else{
                 motorAngle.setPower(0);
             }
+
             if(gamepad1.y){
                 telemetry.addLine("Angle Motor Going Reverse");
                 motorAngle.setPower(-1);
             } else{
                 motorAngle.setPower(0);
             }
-                double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+
+            if(gamepad1.left_trigger >= 0.75){
+                claw.setPosition(1);
+            } else{
+                claw.setPosition(0.5);
+            }
+            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
 

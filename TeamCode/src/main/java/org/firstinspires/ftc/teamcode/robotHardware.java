@@ -77,7 +77,8 @@ public class robotHardware {
             motorLiftF.setDirection(DcMotorSimple.Direction.FORWARD);
             motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
         }
-        //add claw movements later
+        //add lift movements later
+
     }
 
     public class Claw {
