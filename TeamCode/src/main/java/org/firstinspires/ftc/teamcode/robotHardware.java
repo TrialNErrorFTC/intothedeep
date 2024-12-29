@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import java.lang.Math;
 
 
 public class robotHardware {
@@ -23,7 +24,8 @@ public class robotHardware {
     // Lift
 
     public Lift lift;
-    public DcMotor motorAngle;
+    public DcMotor motorAngleF;
+    public DcMotor motorAngleR;
     public DcMotor motorLiftF;
     public DcMotor motorLiftR;
 
@@ -70,15 +72,48 @@ public class robotHardware {
     }
     public class Lift{
         public Lift(@NonNull HardwareMap hardwareMap){
-            motorAngle = hardwareMap.dcMotor.get("motorAngle");
+            motorAngleF = hardwareMap.dcMotor.get("motorAngleF");
+            motorAngleR = hardwareMap.dcMotor.get("motorAngleR");
             motorLiftF = hardwareMap.dcMotor.get("motorLiftF");
             motorLiftR = hardwareMap.dcMotor.get("motorLiftR");
 
+            //TODO: set all to run to position
             motorLiftF.setDirection(DcMotorSimple.Direction.FORWARD);
             motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
         }
         //add lift movements later
+        //Autonomous
+        public void extendToHighBasket(){
 
+        }
+        //TeleOp
+        public void extendToLegalLimit(){
+            //extend to legal limit based on angle
+            //all constants
+            
+            //motorAngle Ticks -> Deg
+            double TICKS_FULL_ROTATION = 537.6;
+            double DIAMETER = 1.0;
+            double CIRCUMFERENCE = DIAMETER * Math.PI;
+            double motorDegree = motorAngleF.getCurrentPosition() * (360 / TICKS_FULL_ROTATION);
+
+            //equation = 42in / cos(angle)
+            int toInches = (int) (42/ Math.cos(motorDegree));
+
+            //inches to ticks
+            int toTicks = (int) (toInches * (CIRCUMFERENCE/TICKS_FULL_ROTATION));
+            motorLiftR.setTargetPosition(toTicks);
+            motorLiftF.setTargetPosition(toTicks);
+        }
+        //hang
+        public void hangInit(){
+            int LENGTH_OF_BOX = 0;
+            double DIAMETER = 1.0;
+            double CIRCUMFERENCE = DIAMETER * Math.PI;
+            float TICKS_FULL_ROTATION = 0;
+
+        }
+        public void hangFinal(){}
     }
 
     public class Claw {
@@ -86,10 +121,10 @@ public class robotHardware {
             clawServo = hardwareMap.servo.get("claw");
         }
         public void clawOpen(@NonNull HardwareMap hardwareMap){
-            clawServo.setPosition(1.0);
+            clawServo.setPosition(0.5);
         }
         public void clawGrab(){
-            clawServo.setPosition(0.75);
+            clawServo.setPosition(1.0);
         }
     }
 }
