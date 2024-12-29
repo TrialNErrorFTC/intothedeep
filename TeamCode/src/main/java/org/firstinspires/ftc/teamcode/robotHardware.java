@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -7,6 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.lang.Math;
 
@@ -29,16 +33,16 @@ public class robotHardware {
     public DcMotor motorLiftF;
     public DcMotor motorLiftR;
 
-
     // claw
     public Claw claw;
     public Servo clawServo;
 
 
-    public robotHardware() {
+    public robotHardware(HardwareMap hardwareMap) {
 
-        drivetrain = new Drivetrain(hardwareMap);
-        lift = new Lift(hardwareMap);
+        drivetrain = new Drivetrain(this.hardwareMap);
+        lift = new Lift(this.hardwareMap);
+        claw = new Claw(this.hardwareMap);
     }
 
     public class Drivetrain {
@@ -81,50 +85,95 @@ public class robotHardware {
             motorLiftF.setDirection(DcMotorSimple.Direction.FORWARD);
             motorLiftR.setDirection(DcMotorSimple.Direction.REVERSE);
         }
-        //add lift movements later
-        //Autonomous
-        public void extendToHighBasket(){
+        public int findMaxDistance(){
+            //constants
+            int LENGTH_OF_CLAW = 1; //TODO: Find Length of Claw
+            int INITIAL_OFFSET = 1; //TODO: find the length in which the offset is(be rough)
+            //ticks of motor -> degree
+            int degree = ticksToDegree(motorAngleF.getCurrentPosition());
+            //check degree limit
+            if(withinCertifiedAngleLimit(degree)){
+                return 0;
+            }
+            //distance = (42 - LENGTH_OF_CLAW - DIST)/cos(degree)
+            int distance = (int) ((42 - LENGTH_OF_CLAW - INITIAL_OFFSET)/Math.cos(degree));
+            //dist(in inches) -> ticks
+            int ticks = inchesToTicks(distance);
+            return ticks;
+        }
+        public void setMaxDistance(){
+            //set Position of Distance with given value
+            //check for Max Distance
+            motorAngleF.setTargetPosition(findMaxDistance());
+            motorAngleR.setTargetPosition(findMaxDistance());
+        }
+        public boolean withinCertifiedAngleLimit(int angle){
+            //convert 90deg angle to ticks
+            if (angle < 0 || angle > 134.475 * 4){ //angle less than 0, and greater than 134.475*4
+                return false;
+            }
+            else{
+                return true;
+            }
 
         }
-        //TeleOp
-        public void extendToLegalLimit(){
-            //extend to legal limit based on angle
-            //all constants
-            
-            //motorAngle Ticks -> Deg
-            double TICKS_FULL_ROTATION = 537.6;
-            double DIAMETER = 1.0;
-            double CIRCUMFERENCE = DIAMETER * Math.PI;
-            double motorDegree = motorAngleF.getCurrentPosition() * (360 / TICKS_FULL_ROTATION);
-
-            //equation = 42in / cos(angle)
-            int toInches = (int) (42/ Math.cos(motorDegree));
-
-            //inches to ticks
-            int toTicks = (int) (toInches * (CIRCUMFERENCE/TICKS_FULL_ROTATION));
-            motorLiftR.setTargetPosition(toTicks);
-            motorLiftF.setTargetPosition(toTicks);
+        public void retract(){
+            //check if ticks == 0;
+            if(motorLiftF.getCurrentPosition() == 0){
+                telemetry.addLine("At Min Length, Cannot Go Lower");
+            }
+            //subtract position by -10 or something
         }
-        //hang
-        public void hangInit(){
-            int LENGTH_OF_BOX = 0;
-            double DIAMETER = 1.0;
-            double CIRCUMFERENCE = DIAMETER * Math.PI;
-            float TICKS_FULL_ROTATION = 0;
-
+        public void extend(){
+            //check if ticks == findMaxDistance
+            //add ticks by +10 or something
         }
-        public void hangFinal(){}
+    }
+
+    private int inchesToTicks(double inches) {
+        double DIAMETER = 1.0;  //TODO: find diameter
+        double CIRCUMFERENCE = DIAMETER * Math.PI;
+        return (int) (inches * (537.7*4/CIRCUMFERENCE));
+    }
+
+    private int ticksToDegree(int ticks) {
+        return (int) (ticks * (360/(537.6*4)));
     }
 
     public class Claw {
         public Claw(@NonNull HardwareMap hardwareMap) {
             clawServo = hardwareMap.servo.get("claw");
         }
-        public void clawOpen(@NonNull HardwareMap hardwareMap){
+        public void clawOpen(){
             clawServo.setPosition(0.5);
         }
         public void clawGrab(){
             clawServo.setPosition(1.0);
         }
+    }
+    public void hangInit(){
+        //calculate ticks for level 1, 2, 3 ascent
+        //move arm to 90 deg
+        //increase ticks to specific height
+    }
+    public void hang(){
+        //set distance to 0 ticks
+    }
+    public void resetEncoders(){
+        //reset all encoders
+        motorAngleF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorAngleR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorLiftR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        motorAngleF.setTargetPosition(0);
+        motorAngleR.setTargetPosition(0);
+        motorLiftR.setTargetPosition(0);
+        motorLiftF.setTargetPosition(0);
+
+
+    }
+    public void telemetryUpdate(Telemetry telemetry){
+
     }
 }
