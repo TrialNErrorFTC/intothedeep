@@ -4,11 +4,14 @@ import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.tel
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.lang.Math;
 
@@ -92,7 +95,7 @@ public class robotHardware {
         // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
         // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
         // and named "imu".
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        BNO055IMU imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
     }
 
@@ -117,10 +120,10 @@ public class robotHardware {
         claw = new Claw(hardwareMap);
     }
     public class DriveTrain {
-        public DcMotor motorFL;
-        public DcMotor motorFR;
-        public DcMotor motorBL;
-        public DcMotor motorBR;
+        public DcMotor frontLeft;
+        public DcMotor frontRight;
+        public DcMotor rearLeft;
+        public DcMotor rearRight;
         public DcMotor[] motors;
 
         public DriveTrain(HardwareMap hardwareMap) {
