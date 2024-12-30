@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.robotHardware;
 public class robotTeleOp extends OpMode {
 robotHardware robot;
 
+
     @Override
     public void init() {
         robot = new robotHardware(hardwareMap);
@@ -36,20 +37,75 @@ robotHardware robot;
         clawControl();
         armControl();
         hangControl();
+        testAngleControl();
+        testExtendoControl();
+
+        // java functions stop other code running, so we make a switch case, switch case code are non-blocking code, so other code can be run
+        switch (robot.currentState) {
+            // the cases for intake
+            case INTAKE:
+                robot.Intake();
+            case HOLD:
+                robot.Hold();
+            case LOW_POLE:
+                robot.LowPole();
+            case HIGH_POLE:
+                robot.HighPole();
+            case HIGH_BUCKET:
+                robot.HighBucket();
+            case LOW_BUCKET:
+                robot.LowBucket();
+            case HANG:
+                //
+                // this code is not blocked, because of the FSM. You can do this even if the other is happening.
+        }
     }
+
+    private void testExtendoControl() {
+        if (gamepad1.b) {
+            robot.motorExtension2.setPower(0.2);
+            robot.motorExtension1.setPower(0.2);
+        } else if (gamepad1.a) {
+            robot.motorExtension2.setPower(-0.2);
+            robot.motorExtension1.setPower(-0.2);
+        } else {
+            robot.motorExtension2.setPower(0);
+            robot.motorExtension1.setPower(0);
+        }
+    }
+
+
+    private void testAngleControl() {
+        if (gamepad1.x) {
+            robot.motorAngle1.setPower(0.2);
+            robot.motorAngle2.setPower(0.2);
+        } else if (gamepad1.y){
+
+            robot.motorAngle1.setPower(-0.2);
+            robot.motorAngle2.setPower(-0.2);
+
+        }else {
+            robot.motorAngle2.setPower(0);
+            robot.motorAngle1.setPower(0);
+        }
+    }
+
 
     private void hangControl() {
     }
 
     private void armControl() {
-        if(gamepad1.left_trigger >= 0.75){
-            robot.claw.clawGrab();
-        } else{
-            robot.claw.clawOpen();
-        }
+
     }
 
+
+
     private void clawControl() {
+        if(gamepad1.left_trigger >= 0.5 || robot.currentState == robotHardware.States.INTAKE){
+            robot.claw.clawOpen();
+        } else{
+            robot.claw.clawGrab();
+        }
     }
 
 
