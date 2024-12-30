@@ -8,16 +8,16 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.robotHardware;
+import org.firstinspires.ftc.teamcode.RobotHardware;
 
 @TeleOp
 public class robotTeleOp extends OpMode {
-robotHardware robot;
+RobotHardware robot;
 
 
     @Override
     public void init() {
-        robot = new robotHardware(hardwareMap);
+        robot = new RobotHardware(hardwareMap);
 
         robot.resetEncoders();
 
@@ -75,47 +75,7 @@ robotHardware robot;
 //            robot.motorExtension2.setPower(0);
 //            robot.motorExtension1.setPower(0);
 //        }
-        if(gamepad1.a){
-            robot.motorExtension2.setPower(1);
-        } else {
-            robot.motorExtension2.setPower(0);
-        }
-        if (gamepad1.b) {
-            robot.motorExtension1.setPower(1);
-        } else {
-            robot.motorExtension1.setPower(0);
-        }
-        if (gamepad1.x) {
-            robot.motorAngle1.setPower(1);
-        } else {
-            robot.motorAngle1.setPower(0);
-        }
-        if (gamepad1.y){
-            robot.motorAngle2.setPower(1);
-        } else {
-            robot.motorAngle2.setPower(0);
-        }
 
-        if(gamepad1.dpad_up){
-            robot.motorExtension2.setPower(-1);
-        } else {
-            robot.motorExtension2.setPower(0);
-        }
-        if (gamepad1.dpad_down) {
-            robot.motorExtension1.setPower(-1);
-        } else {
-            robot.motorExtension1.setPower(0);
-        }
-        if (gamepad1.dpad_left) {
-            robot.motorAngle1.setPower(-1);
-        } else {
-            robot.motorAngle1.setPower(0);
-        }
-        if (gamepad1.dpad_right){
-            robot.motorAngle2.setPower(-1);
-        } else {
-            robot.motorAngle2.setPower(0);
-        }
         telemetry.update();
     }
 
@@ -146,7 +106,7 @@ robotHardware robot;
 
 
     private void clawControl() {
-        if(gamepad1.left_trigger >= 0.5 || robot.currentState == robotHardware.States.INTAKE){
+        if(gamepad1.left_trigger >= 0.5 || robot.currentState == RobotHardware.States.INTAKE){
             robot.claw.clawOpen();
         } else{
             robot.claw.clawGrab();
