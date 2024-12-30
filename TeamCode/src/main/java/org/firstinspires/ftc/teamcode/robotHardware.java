@@ -278,7 +278,7 @@ public class robotHardware {
                 motorAngle1 = hardwareMap.get(DcMotor.class, "motorAngle1");
 
 
-                motorAngle1.setDirection(DcMotorSimple.Direction.REVERSE);
+                motorAngle1.setDirection(DcMotorSimple.Direction.FORWARD);
                 motorAngle1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 motorAngle1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 motorAngle1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -296,7 +296,7 @@ public class robotHardware {
                 motorExtension1 = hardwareMap.get(DcMotor.class, "motorExtension1");
 
 
-                motorExtension1.setDirection(DcMotorSimple.Direction.REVERSE);
+                motorExtension1.setDirection(DcMotorSimple.Direction.FORWARD);
                 motorExtension1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 motorExtension1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 motorExtension1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -332,11 +332,13 @@ public class robotHardware {
                 //set Position of Distance with given value
                 //check for Max Distance
                 motorAngle1.setTargetPosition(findMaxDistance());
+                motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 motorAngle2.setTargetPosition(findMaxDistance());
+                motorAngle2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
             public boolean withinCertifiedAngleLimit(int angle) {
-                if (angle < 0 || angle > 134.475 * 4) { //angle less than 0, and greater than 134.475*4
+                if (angle < 0 || angle > 90) { //angle less than 0, and greater than 134.475*4
                     return false;
                 } else {
                     return true;
@@ -361,11 +363,11 @@ public class robotHardware {
         private int inchesToTicks(double inches) {
             double DIAMETER = 1.0;  //TODO: find diameter
             double CIRCUMFERENCE = DIAMETER * Math.PI;
-            return (int) (inches * (537.7 * 4 / CIRCUMFERENCE));
+            return (int) (inches * (537.7 / CIRCUMFERENCE));
         }
 
         private int ticksToDegree(int ticks) {
-            return (int) (ticks * (360 / (537.6 * 4)));
+            return (int) (ticks * (360 / (1425.1)));
         }
 
         public class Claw {
@@ -386,8 +388,8 @@ public class robotHardware {
             //calculate ticks for level 1, 2, 3 ascent
             int ASCENT_BAR_HEIGHT = 1;  //TODO: measure height of ascent bar
             //move arm to 90 deg
-            motorAngle1.setTargetPosition(134 * 4);
-            motorAngle2.setTargetPosition(134 * 4);
+            motorAngle1.setTargetPosition(134);
+            motorAngle2.setTargetPosition(134);
             //increase ticks to specific height
             motorExtension1.setTargetPosition(inchesToTicks(ASCENT_BAR_HEIGHT));
             motorExtension2.setTargetPosition(inchesToTicks(ASCENT_BAR_HEIGHT));

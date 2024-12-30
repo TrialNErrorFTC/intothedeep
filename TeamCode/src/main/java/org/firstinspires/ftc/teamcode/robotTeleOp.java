@@ -75,7 +75,7 @@ robotHardware robot;
 //            robot.motorExtension2.setPower(0);
 //            robot.motorExtension1.setPower(0);
 //        }
-        if(gamepad1.a){
+        if (gamepad1.a) {
             robot.motorExtension2.setPower(1);
         } else {
             robot.motorExtension2.setPower(0);
