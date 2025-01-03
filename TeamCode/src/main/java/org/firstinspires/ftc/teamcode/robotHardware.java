@@ -38,9 +38,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.robotHardwareOld;
-
-import java.util.HashMap;
 
 /*
  * This file works in conjunction with the External Hardware Class sample called: ConceptExternalHardwareClass.java
@@ -72,7 +69,8 @@ public class robotHardware {
     public DcMotor frontRight = null;
     public DcMotor rearLeft = null;
     public DcMotor rearRight = null;
-    public DcMotor[] motors = null;
+    public DcMotor[] drivetrainMotors = null;
+    public DcMotor[] liftMotors = null;
     double k = 1;
     int tickConversionConstant = (int) (1425.1/537.7);
 
@@ -141,10 +139,10 @@ public class robotHardware {
         frontRight = myOpMode.hardwareMap.get(DcMotor.class, "frontRight");
         rearLeft = myOpMode.hardwareMap.get(DcMotor.class, "backLeft");
         rearRight = myOpMode.hardwareMap.get(DcMotor.class, "backRight");
-        motors = new DcMotor[]{frontLeft, frontRight, rearLeft, rearRight};
+        drivetrainMotors = new DcMotor[]{frontLeft, frontRight, rearLeft, rearRight};
 
         for (DcMotor motor:
-             motors) {
+                drivetrainMotors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
@@ -188,7 +186,7 @@ public class robotHardware {
         motorExtension2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorExtension2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorExtension2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
+        liftMotors = new DcMotor[]{motorAngle1, motorAngle2, motorExtension1, motorExtension2};
         servoClaw = myOpMode.hardwareMap.servo.get("claw");
 
     }
@@ -208,7 +206,7 @@ public class robotHardware {
         rearRight.setPower(Range.clip(powerBR / max, -1, 1));
     }
     public void stopMove() {
-        for (DcMotor motor : motors) {
+        for (DcMotor motor : drivetrainMotors) {
             motor.setPower(0);
         }
         motorAngle1.setPower(0);
@@ -217,19 +215,14 @@ public class robotHardware {
         motorExtension2.setPower(0);
     }
 
-    public void resetDriveEncoders() {
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
+
     public void up(){
         //TODO: targetPosition +10 to currentPosition
         motorAngle1.setTargetPosition(motorAngle1.getCurrentPosition() + 100);
         motorAngle2.setTargetPosition(motorAngle2.getCurrentPosition() + 100);
         //TODO: divide by k for smoothness of closing
-        motorExtension1.setTargetPosition((int) (motorExtension2.getCurrentPosition() + (tickConversionConstant * 100)/k));
-        motorExtension2.setTargetPosition((int) (motorExtension2.getCurrentPosition() + (tickConversionConstant * 100)/k));
+        motorExtension1.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() + (tickConversionConstant * 100)));
+        motorExtension2.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() + (tickConversionConstant * 100)));
 
         motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorAngle1.setPower(1);
@@ -245,8 +238,8 @@ public class robotHardware {
         motorAngle1.setTargetPosition(motorAngle1.getCurrentPosition() - 100);
         motorAngle2.setTargetPosition(motorAngle2.getCurrentPosition() - 100);
         //TODO: divide by k for smoothness of closing
-        motorExtension1.setTargetPosition((int) (motorExtension1.getCurrentPosition() - (tickConversionConstant* 100)/k));
-        motorExtension2.setTargetPosition((int) (motorExtension2.getCurrentPosition() - (tickConversionConstant * 100)/k));
+        motorExtension1.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() - (tickConversionConstant * 100)));
+        motorExtension2.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() - (tickConversionConstant * 100)));
 
         motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorAngle1.setPower(1);
@@ -261,8 +254,8 @@ public class robotHardware {
     public void extend(){
         //TODO: targetPosition +10 to currentPosition
         //TODO: divide by k for smoothness of closingl
-        motorExtension1.setTargetPosition(motorExtension1.getCurrentPosition() + 250);
-        motorExtension2.setTargetPosition(motorExtension2.getCurrentPosition() + 250);
+        motorExtension1.setTargetPosition(checkMaxDistance(motorExtension1.getCurrentPosition() + 250));
+        motorExtension2.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() + 250));
 
         motorExtension1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorExtension1.setPower(1);
@@ -271,8 +264,8 @@ public class robotHardware {
     public void retract(){
         //TODO: targetPosition +10 to currentPosition
         //TODO: divide by k for smoothness of closing
-        motorExtension1.setTargetPosition(motorExtension1.getCurrentPosition() - 250);
-        motorExtension2.setTargetPosition(motorExtension2.getCurrentPosition() - 250);
+        motorExtension1.setTargetPosition(checkMaxDistance(motorExtension1.getCurrentPosition() - 250));
+        motorExtension2.setTargetPosition(checkMaxDistance(motorExtension2.getCurrentPosition() - 250));
 
         motorExtension1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorExtension1.setPower(1);
@@ -377,15 +370,12 @@ public class robotHardware {
         public int findMaxDistance() {
                 //constants
                 int LENGTH_OF_CLAW = 1; //TODO: Find Length of Claw
-                int INITIAL_OFFSET = 0; //TODO: find the length in which the offset is(be rough)
+                int INITIAL_OFFSET = 18; //TODO: find the length in which the offset is(be rough)
                 //ticks of motor -> degree
                 int degree = ticksToDegree(motorAngle1.getCurrentPosition());
                 //check degree limit
-                if (withinCertifiedAngleLimit(degree)) {
-                    return 0;
-                }
                 //distance = (42 - LENGTH_OF_CLAW - DIST)/cos(degree)
-                int distance = (int) ((42 - LENGTH_OF_CLAW - INITIAL_OFFSET) / Math.cos(degree));
+                int distance = (int) ((42 - LENGTH_OF_CLAW - INITIAL_OFFSET) / Math.cos(Math.toRadians(degree)));
                 //dist(in inches) -> ticks
                 int ticks = inchesToTicks(distance);
                 return ticks;
@@ -401,10 +391,7 @@ public class robotHardware {
             }
 
             public int checkMaxDistance(double ticks){
-                if(ticks >= findMaxDistance()){
-                    telemetry.addLine("Sorry, that will pass max limit. Robot lift will go to max limit instead.");
-                    return findMaxDistance();
-                }
+                myOpMode.telemetry.addData("Max Distance", findMaxDistance());
                 return (int) ticks;
             }
             public boolean withinCertifiedAngleLimit(int angle) {
@@ -419,11 +406,11 @@ public class robotHardware {
             private int inchesToTicks(double inches) {
             double DIAMETER = 71.3/25.4;  //TODO: find diameter
             double CIRCUMFERENCE = DIAMETER * Math.PI;
-            return (int) (inches * (1425.1 / CIRCUMFERENCE) * 28/10);
+            return (int) (inches * (1425.1 / CIRCUMFERENCE));
         }
 
         private int ticksToDegree(int ticks) {
-            return (int) (ticks * ((360 / (537.7)) % 360) * (10/28)) ;
+            return (int) (ticks * ((360 / (537.7)) % 360)) ;
         }
 
     public void clawOpen() {
@@ -452,6 +439,10 @@ public class robotHardware {
         }
 
     public void resetEncoders() {
+        for (DcMotor motor : drivetrainMotors) {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
         //reset all encoders
         motorAngle1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorAngle2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
