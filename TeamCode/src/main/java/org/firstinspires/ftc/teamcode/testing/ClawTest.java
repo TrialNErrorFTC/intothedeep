@@ -10,9 +10,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ClawTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotor motorAngle = hardwareMap.dcMotor.get("motorAngle");
-        DcMotor motorLiftForward = hardwareMap.dcMotor.get("motorLiftF");
-        DcMotor motorLiftReverse = hardwareMap.dcMotor.get("motorLiftR");
+        DcMotor motorAngle1 = hardwareMap.dcMotor.get("motorAngle1");
+        DcMotor motorAngle2 = hardwareMap.dcMotor.get("motorAngle2");
+        DcMotor motorLiftForward = hardwareMap.dcMotor.get("motorExtension1");
+        DcMotor motorLiftReverse = hardwareMap.dcMotor.get("motorExtension2");
 
         motorLiftForward.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motorLiftReverse.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -23,6 +24,10 @@ public class ClawTest extends LinearOpMode {
         Servo claw = hardwareMap.servo.get("claw");
         motorLiftForward.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLiftReverse.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        motorAngle1.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorAngle2.setDirection(DcMotorSimple.Direction.REVERSE);
+
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -53,16 +58,20 @@ public class ClawTest extends LinearOpMode {
             }
             if(gamepad1.x){
                 telemetry.addLine("Angle Motor Going Forward");
-                motorAngle.setPower(1);
+                motorAngle1.setPower(1);
+                motorAngle2.setPower(1);
             } else{
-                motorAngle.setPower(0);
+                motorAngle1.setPower(0);
+                motorAngle2.setPower(0);
             }
 
             if(gamepad1.y){
                 telemetry.addLine("Angle Motor Going Reverse");
-                motorAngle.setPower(-1);
+                motorAngle1.setPower(-1);
+                motorAngle2.setPower(-1);
             } else{
-                motorAngle.setPower(0);
+                motorAngle1.setPower(0);
+                motorAngle2.setPower(0);
             }
 
             if(gamepad1.left_trigger >= 0.75){
