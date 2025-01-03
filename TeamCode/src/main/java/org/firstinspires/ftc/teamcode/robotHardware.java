@@ -40,6 +40,8 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.robotHardwareOld;
 
+import java.util.HashMap;
+
 /*
  * This file works in conjunction with the External Hardware Class sample called: ConceptExternalHardwareClass.java
  * Please read the explanations in that Sample about how to use this class definition.
@@ -141,6 +143,11 @@ public class robotHardware {
         rearRight = myOpMode.hardwareMap.get(DcMotor.class, "backRight");
         motors = new DcMotor[]{frontLeft, frontRight, rearLeft, rearRight};
 
+        for (DcMotor motor:
+             motors) {
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
 
         frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -231,7 +238,8 @@ public class robotHardware {
         motorExtension1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorExtension1.setPower(1);
         motorExtension2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorExtension2.setPower(1);}
+        motorExtension2.setPower(1);
+    }
     public void down(){
         //TODO: targetPosition +10 to currentPosition
         motorAngle1.setTargetPosition(motorAngle1.getCurrentPosition() - 100);
@@ -369,7 +377,7 @@ public class robotHardware {
         public int findMaxDistance() {
                 //constants
                 int LENGTH_OF_CLAW = 1; //TODO: Find Length of Claw
-                int INITIAL_OFFSET = 1; //TODO: find the length in which the offset is(be rough)
+                int INITIAL_OFFSET = 0; //TODO: find the length in which the offset is(be rough)
                 //ticks of motor -> degree
                 int degree = ticksToDegree(motorAngle1.getCurrentPosition());
                 //check degree limit
@@ -392,12 +400,16 @@ public class robotHardware {
                 motorAngle2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
-            public boolean withinCertifiedAngleLimit(int angle) {
-                if (angle < 0 || angle > 90) { //angle less than 0, and greater than 134.475*4
-                    return false;
-                } else {
-                    return true;
+            public int checkMaxDistance(double ticks){
+                if(ticks >= findMaxDistance()){
+                    telemetry.addLine("Sorry, that will pass max limit. Robot lift will go to max limit instead.");
+                    return findMaxDistance();
                 }
+                return (int) ticks;
+            }
+            public boolean withinCertifiedAngleLimit(int angle) {
+                //angle less than 0, and greater than 134.475*4
+                return angle >= 0 && angle <= 90;
 
             }
 
@@ -405,13 +417,13 @@ public class robotHardware {
 
 
             private int inchesToTicks(double inches) {
-            double DIAMETER = 1.0;  //TODO: find diameter
+            double DIAMETER = 71.3/25.4;  //TODO: find diameter
             double CIRCUMFERENCE = DIAMETER * Math.PI;
-            return (int) (inches * (1425.1 / CIRCUMFERENCE));
+            return (int) (inches * (1425.1 / CIRCUMFERENCE) * 28/10);
         }
 
         private int ticksToDegree(int ticks) {
-            return (int) (ticks * (360 / (537.7)));
+            return (int) (ticks * ((360 / (537.7)) % 360) * (10/28)) ;
         }
 
     public void clawOpen() {
