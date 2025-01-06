@@ -21,6 +21,18 @@ public class robotTeleOp extends LinearOpMode {
 
         if (isStopRequested()) return;
         while (opModeIsActive()) {
+            if (robot.motorAngle1.getCurrentPosition() >= 580) {
+                robot.motorAngle1.setTargetPosition(580);
+                robot.motorAngle2.setTargetPosition(580);
+                robot.motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.motorAngle2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            }
+//            robot.motorExtension1.setPower(0);
+//            robot.motorExtension2.setPower(0);
+//            if (robot.motorExtension1.getCurrentPosition() <= -5000){
+//          }
+
             clawControl();
             angleControl();
             extensionControl();
@@ -28,24 +40,35 @@ public class robotTeleOp extends LinearOpMode {
         }
     }
 
+    boolean onOff = false;
+
     private void clawControl() {
-        if (gamepad1.a) {
-            robot.clawOpen();
+        if(gamepad1.a){
+            robot.servoClaw.setPosition(1.0);
         }
-        if (gamepad1.b) {
-            robot.clawGrab();
+        if(gamepad1.b){
+            robot.servoClaw.setPosition(0.6);
         }
+
     }
 
     private void angleControl() {
         if (gamepad1.dpad_up) {
             robot.up();
         }
-        ;
+
         if (gamepad1.dpad_down) {
             robot.down();
         }
-        ;
+
+    }
+
+    private void angleStepControl() {
+
+    }
+
+    private void angleControlWithTrigger() {
+
     }
 
     private void extensionControl() {
@@ -81,14 +104,15 @@ public class robotTeleOp extends LinearOpMode {
     }
 
     private void driveControl() {
-        double scale = 0.5;
+        double scale = 0.6;
         if (gamepad1.left_trigger > 0.5) {
             gamepad1.rumble(500);
-            scale = 0.8;
-        } else if (gamepad1.right_trigger > 0.5) {
-            scale = 0.1;
+            scale = 0.9;
         }
-
+//        else if (gamepad1.right_trigger > 0.5) {
+//            scale = 0.1;
+//        }
+        robot.servoClaw.setPosition(1.0 - gamepad1.right_trigger);
         double drive = gamepad1.left_stick_y;
         double strafe = -gamepad1.left_stick_x;
         double turn = -gamepad1.right_stick_x;
