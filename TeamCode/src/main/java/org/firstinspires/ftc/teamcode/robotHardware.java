@@ -29,8 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -40,6 +38,9 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.pipeline.RedProcessor;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 /*
  * This file works in conjunction with the External Hardware Class sample called: ConceptExternalHardwareClass.java
@@ -112,6 +113,8 @@ public class robotHardware {
     public static int ANGLE_HIGH_POLE_POS = 0;
     public static int ANGLE_LOW_BUCKET_POS = 0;
     public static int ANGLE_HIGH_BUCKET_POS = 0;
+    VisionPortal myVisionPortal;
+    RedProcessor redProcessor = new RedProcessor();
 
     public BNO055IMU imu;
 
@@ -222,7 +225,12 @@ public class robotHardware {
         liftMotors = new DcMotor[]{motorAngle1, motorAngle2, motorExtension1, motorExtension2};
 
         servoClaw = myOpMode.hardwareMap.servo.get("claw");
-        //comment
+
+        //setup visionprocessor here
+
+        //setup visionportal here
+        myVisionPortal = VisionPortal.easyCreateWithDefaults(myOpMode.hardwareMap.get(WebcamName.class, "Webcam 1"), redProcessor);
+
     }
 
     public void startMove(double drive, double strafe, double turn, double scale) {
@@ -300,17 +308,18 @@ public class robotHardware {
         double MAX_POWER = 0; //max power
         return MIN_POWER + Math.cos(angle) * MAX_POWER;
     }
+
     public double extensionPower(double ticks) {
         double power = 1.0;
-        if(ticks > 500){
+        if (ticks > 500) {
             power = 0.8;
         } else if (ticks >= 500 && ticks < 700) {
             power = 0.7;
         } else if (ticks >= 700 && ticks < 900) {
             power = 0.6;
-        } else if (ticks >= 900 && ticks  < 1100){
+        } else if (ticks >= 900 && ticks < 1100) {
             power = 0.5;
-        } else if (ticks >= 1100 && ticks <= 1300){
+        } else if (ticks >= 1100 && ticks <= 1300) {
             power = 0.4;
         }
         return power;
@@ -347,6 +356,7 @@ public class robotHardware {
             servoClaw.setPosition(0);
         }
     }
+
     public void Intake() {
         motorAngle1.setTargetPosition(ANGLE_INTAKE_POS);
         motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -575,7 +585,6 @@ public class robotHardware {
         myOpMode.telemetry.addData("trigger", myOpMode.gamepad1.left_trigger);
         myOpMode.telemetry.update();
     }
-
 
 
 }

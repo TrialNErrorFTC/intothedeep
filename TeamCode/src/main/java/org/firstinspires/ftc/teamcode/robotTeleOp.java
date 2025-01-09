@@ -11,14 +11,18 @@ import org.firstinspires.ftc.teamcode.robotHardware;
 @TeleOp
 public class robotTeleOp extends LinearOpMode {
 
+    // Initialize the robot hardware.
     robotHardware robot = new robotHardware(this);
 
+    // Code to run ONCE when the driver hits INIT.
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init();
         robot.resetEncoders();
         waitForStart();
 
+
+        // Run until the end of the match (driver presses STOP) or until stop is requested.
         if (isStopRequested()) return;
         while (opModeIsActive()) {
             if (robot.motorAngle1.getCurrentPosition() >= 580) {
@@ -26,12 +30,8 @@ public class robotTeleOp extends LinearOpMode {
                 robot.motorAngle2.setTargetPosition(580);
                 robot.motorAngle1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.motorAngle2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
             }
-//            robot.motorExtension1.setPower(0);
-//            robot.motorExtension2.setPower(0);
-//            if (robot.motorExtension1.getCurrentPosition() <= -5000){
-//          }
+
 
             clawControl();
             angleControl();
@@ -43,10 +43,10 @@ public class robotTeleOp extends LinearOpMode {
     boolean onOff = false;
 
     private void clawControl() {
-        if(gamepad1.a){
+        if (gamepad1.a) {
             robot.servoClaw.setPosition(1.0);
         }
-        if(gamepad1.b){
+        if (gamepad1.b) {
             robot.servoClaw.setPosition(0.6);
         }
 
