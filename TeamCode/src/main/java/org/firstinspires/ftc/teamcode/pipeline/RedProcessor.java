@@ -8,22 +8,49 @@ import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import android.graphics.Paint;
+import android.graphics.Color;
+
 
 public class RedProcessor implements VisionProcessor {
+    // Create a new Paint object
+    Paint paint = new Paint();
+    List<MatOfPoint> contours = new ArrayList<>();
+
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
         // Not useful in this case, but we do need to implement it either way
     }
 
+    private android.graphics.Rect makeGraphicsRect(Rect rect, float scaleBmpPxToCanvasPx) {
+        int left = Math.round(rect.x * scaleBmpPxToCanvasPx);
+        int top = Math.round(rect.y * scaleBmpPxToCanvasPx);
+        int right = left + Math.round(rect.width * scaleBmpPxToCanvasPx);
+        int bottom = top + Math.round(rect.height * scaleBmpPxToCanvasPx);
+
+        return new android.graphics.Rect(left, top, right, bottom);
+    }
+
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
-        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
+        if (frame == null) return null;
+
+        // Create a copy of the frame
+        Mat hsvFrame = new Mat();
+        Imgproc.cvtColor(frame, hsvFrame, Imgproc.COLOR_RGB2HSV);
 
         // Define the lower and upper bounds for the red color range
         Scalar lowerRed1 = new Scalar(0, 100, 100);
@@ -34,29 +61,90 @@ public class RedProcessor implements VisionProcessor {
         // Create masks for the red color ranges
         Mat mask1 = new Mat();
         Mat mask2 = new Mat();
-        Core.inRange(frame, lowerRed1, upperRed1, mask1);
-        Core.inRange(frame, lowerRed2, upperRed2, mask2);
+        Core.inRange(hsvFrame, lowerRed1, upperRed1, mask1);
+        Core.inRange(hsvFrame, lowerRed2, upperRed2, mask2);
 
         // Combine the masks
-        Core.addWeighted(mask1, 1.0, mask2, 1.0, 0.0, frame);
+        Mat combinedMask = new Mat();
+        Core.addWeighted(mask1, 1.0, mask2, 1.0, 0.0, combinedMask);
 
         // Fill in the holes
-        Imgproc.dilate(frame, frame, new Mat());
-        Imgproc.erode(frame, frame, new Mat());
+        Imgproc.dilate(combinedMask, combinedMask, new Mat());
+        Imgproc.erode(combinedMask, combinedMask, new Mat());
 
-        // Find the rectangles
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(frame, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        // Draw the rectangles
-        Imgproc.drawContours(frame, contours, -1, new Scalar(255, 0, 0), 2);
+        // Find the rectangles using edge detection
+        Mat hierarchy = new Mat();
+        Imgproc.findContours(combinedMask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Filter out the contours that are not rectangles
+        for (int i = 0; i < contours.size(); i++) {
+            MatOfPoint contour = contours.get(i);
+            if (contour == null) continue;
+            double perimeter = Imgproc.arcLength(new MatOfPoint2f(contour.toArray()), true);
+            MatOfPoint2f approx = new MatOfPoint2f();
+            Imgproc.approxPolyDP(new MatOfPoint2f(contour.toArray()), approx, 0.02 * perimeter, true);
+            if (approx.toList().size() == 4) {
+                contours.set(i, new MatOfPoint(approx.toArray()));
+            } else {
+                contours.remove(i);
+                i--;
+            }
+        }
+
+        // Find the largest rectangle and draw a rotated bounding box
+        if (contours.size() > 0) {
+            MatOfPoint largestContour = findLargestContour(contours);
+            if (largestContour != null) {
+                MatOfPoint2f largestContour2f = new MatOfPoint2f(largestContour.toArray());
+                RotatedRect rotatedRect = Imgproc.minAreaRect(largestContour2f);
+                Point[] vertices = new Point[4];
+                rotatedRect.points(vertices);
+
+                for (int j = 0; j < 4; j++) {
+                    Imgproc.line(frame, vertices[j], vertices[(j + 1) % 4], new Scalar(255, 0, 0), 2);
+                }
+            }
+        }
+
+        // Release resources
+        hsvFrame.release();
+        mask1.release();
+        mask2.release();
+        combinedMask.release();
+        hierarchy.release();
+        contours = new ArrayList<>();
 
         return frame;
     }
-
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-        // Not useful either
-    }
+        //get the contours from the processFrame method
+//        Mat frame = (Mat) userContext;
+//        for (int i = 0; i < contours.size(); i++) {
+//            MatOfPoint contour = contours.get(i);
+//            Rect rect = Imgproc.boundingRect(contour);
+//            android.graphics.Rect graphicsRect = makeGraphicsRect(rect, scaleBmpPxToCanvasPx);
+//            paint.setColor(Color.RED);
+//            paint.setStyle(Paint.Style.STROKE);
+//            paint.setStrokeWidth(5);
+//            canvas.drawRect(graphicsRect, paint);
+//        }
 
-}
+
+    }
+    private MatOfPoint findLargestContour(List<MatOfPoint> contours) {
+        double maxArea = 0;
+        MatOfPoint largestContour = null;
+
+        for (MatOfPoint contour : contours) {
+            double area = Imgproc.contourArea(contour);
+            if (area > maxArea) {
+                maxArea = area;
+                largestContour = contour;
+            }
+        }
+
+        return largestContour;
+    }
+    }
 
