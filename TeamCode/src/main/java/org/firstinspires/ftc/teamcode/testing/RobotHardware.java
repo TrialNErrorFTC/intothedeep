@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.testing;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,13 +10,10 @@ import com.qualcomm.robotcore.util.Range;
 
 public class RobotHardware {
 
-
     public BNO055IMU imu;
+    public DriveTrain driveTrain;
+    public DcMotor frontLeft; // Alias for easier access
 
-//    public DcMotor motorCarousel;
-
-
-    public Motor motor;
     public static final double WHEEL_DIAMETER = 6.0;
     public static final double DRIVE_MOTOR_TICKS_PER_ROTATION = 385.5; //changing from 537.6
 
@@ -26,81 +24,38 @@ public class RobotHardware {
 
     private HardwareMap hardwareMap;
 
-    public RobotHardware() {
-        motor = new Motor(hardwareMap);
+    public RobotHardware(LinearOpMode opMode) {
+        this.hardwareMap = opMode.hardwareMap;
+        
+        // Initialize IMU
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
+        parameters.loggingEnabled = true;
+        parameters.loggingTag = "IMU";
+        
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+        
+        // Initialize drive train
+        driveTrain = new DriveTrain(hardwareMap);
+        frontLeft = driveTrain.motorFL; // Create alias for AutoCommon compatibility
     }
 
-public class Motor {
-        public DcMotor motor;
-        public Motor(HardwareMap hardwareMap){
-            motor = hardwareMap.get(DcMotor.class, "motor");
-        }
-}
-    //    public class Lift {
-//        public DcMotor motorLift;
-//        public DcMotor motorIntakeHighSpeed;
-//        public DcMotor motorIntakeLowSpeed;
-//        public DcMotor motorHang;
-//        public Servo servoIntake;
-//        public Servo servoLauncher;
-//        public Servo servoBucket;
-//        public int LIFT_INTAKE_POS = 0;
-//        public int LIFT_HOVER_POS = 100;
-//        public int LIFT_LOW_POS = 2350;
-//        public int LIFT_MEDIUM_POS = 35;
-//        public int LIFT_HIGH_POS = 2000;
-//
-//        public double INTAKE_HS_POWER = 0.5;
-//        public double INTAKE_LS_POWER = 0.4;
-//
-//        public double SERVO_INTAKE_INIT_POS = 0.87;
-//        public double SERVO_INTAKE_REG_POS = 0.29;
-//        public double SERVO_INTAKE_STACK_POS = 5;
-//        public double SERVO_INTAKE_HOVER_POS = 0.35;
-//        public double SERVO_INTAKE_JAM_POS = 0.24; //0.625
-//
-//        public double SERVO_LAUNCHER_INT_POS = 0.25;
-//        public double SERVO_LAUNCHER_LAUNCH_POS = 0.75;
-//
-//        public double SERVO_BUCKET_INIT_POS = 0.47;
-//        public double SERVO_BUCKET_INTAKE_POS = 0.47;
-//        public double SERVO_BUCKET_OUTAKE_POS = 0.12; // was 0.15
-//
-//        public Lift(HardwareMap hardwareMap) {
-//            motorIntakeHighSpeed = hardwareMap.get(DcMotor.class, "intakeHS");
-//            motorIntakeHighSpeed.setDirection(DcMotorSimple.Direction.REVERSE);
-//            motorIntakeHighSpeed.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//            motorIntakeHighSpeed.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//            motorIntakeHighSpeed.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//
-//            motorIntakeLowSpeed = hardwareMap.get(DcMotor.class, "intakeLS");
-//            motorIntakeLowSpeed.setDirection(DcMotorSimple.Direction.REVERSE);
-//            motorIntakeLowSpeed.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//            motorIntakeLowSpeed.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//            motorIntakeLowSpeed.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//
-//            motorLift = hardwareMap.get(DcMotor.class, "motorLift");
-//            motorLift.setDirection(DcMotorSimple.Direction.REVERSE);
-//            motorLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//            motorLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//            motorLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//
-//            motorHang = hardwareMap.get(DcMotor.class, "motorHang");
-//            motorHang.setDirection(DcMotorSimple.Direction.REVERSE);
-//            motorHang.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//            motorHang.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//            motorHang.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//
-//            servoIntake = hardwareMap.get(Servo.class, "servoIntake");
-//            servoIntake.setPosition(SERVO_INTAKE_INIT_POS);
-//
-//            servoLauncher = hardwareMap.get(Servo.class, "servoLauncher");
-//            servoLauncher.setPosition(SERVO_LAUNCHER_INT_POS);
-//
-//            servoBucket = hardwareMap.get(Servo.class, "servoBucket");
-//            servoBucket.setPosition(SERVO_BUCKET_INIT_POS);
-//        }
-//    }
+    // Methods that AutoCommon expects
+    public void startMove(double drive, double strafe, double turn, double scale) {
+        driveTrain.startMove(drive, strafe, turn, scale);
+    }
+
+    public void stopMove() {
+        driveTrain.stopMove();
+    }
+
+    public void resetDriveEncoders() {
+        driveTrain.resetDriveEncoders();
+    }
+
     public class DriveTrain {
         public DcMotor motorFL;
         public DcMotor motorFR;
@@ -108,14 +63,12 @@ public class Motor {
         public DcMotor motorBR;
         public DcMotor[] motors;
 
-
         public DriveTrain(HardwareMap hardwareMap) {
             motorFL = hardwareMap.get(DcMotor.class, "leftFront");
             motorFR = hardwareMap.get(DcMotor.class, "rightFront");
             motorBL = hardwareMap.get(DcMotor.class, "leftBack");
             motorBR = hardwareMap.get(DcMotor.class, "rightBack");
             motors = new DcMotor[]{motorFL, motorFR, motorBL, motorBR};
-
 
             motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
             motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -165,106 +118,3 @@ public class Motor {
         }
     }
 }
-//
-//    public void telemetryUpdate(Telemetry telemetry) {
-//        telemetry.addData("BL pos", driveTrain.motorBL.getCurrentPosition());
-//        telemetry.addData("BR pos", driveTrain.motorBR.getCurrentPosition());
-//        telemetry.addData("FR pos", driveTrain.motorFR.getCurrentPosition());
-//        telemetry.addData("FL pos", driveTrain.motorFL.getCurrentPosition());
-//        telemetry.addData("motorLift pos", lift.motorLift.getCurrentPosition());
-//        telemetry.addData("motorHang pos", lift.motorHang.getCurrentPosition());
-//    }
-//
-//
-//    public void Intake() {
-//        lift.motorLift.setTargetPosition(lift.LIFT_INTAKE_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(1);
-//        lift.servoIntake.setPosition(lift.SERVO_INTAKE_REG_POS);
-//        currentState = States.INTAKE;
-//    }
-//
-//    public void turnOnIntake() {
-//        lift.motorIntakeHighSpeed.setPower(lift.INTAKE_HS_POWER);
-//        lift.motorIntakeLowSpeed.setPower(lift.INTAKE_LS_POWER);
-//    }
-//
-//    public void Hover() {
-//        lift.motorLift.setTargetPosition(lift.LIFT_HOVER_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(1);
-//        lift.servoIntake.setPosition(lift.SERVO_INTAKE_REG_POS);
-//
-//        currentState = States.HOVER;
-//    }
-//
-//    private void turnOffIntake() {
-//        lift.motorIntakeHighSpeed.setPower(0);
-//        lift.motorIntakeLowSpeed.setPower(0);
-//    }
-//
-//    public void Low() {
-//        lift.motorLift.setTargetPosition(lift.LIFT_LOW_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(1);
-//        turnOffIntake();
-//        currentState = RobotHardware.States.LOW;
-//    }
-//
-//    public void Medium() {
-//        lift.motorLift.setTargetPosition(lift.LIFT_MEDIUM_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(1);
-//        turnOffIntake();
-//        currentState = RobotHardware.States.MEDIUM;
-//    }
-//
-//    public void High() {
-//        lift.motorLift.setTargetPosition(lift.LIFT_HIGH_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(0.5);
-//        turnOffIntake();
-//        currentState = RobotHardware.States.HIGH;
-//    }
-//
-//    /*
-//     * Hang Functions Belong Here
-//     * */
-//    public void HangInit() {
-//        lift.motorLift.setTargetPosition(HANG_INIT_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(0.4);
-//        currentState = States.INTAKE;
-//    }
-//
-//    public void HangGrab() {
-//        lift.motorLift.setTargetPosition(-HANG_GRAB_POS);
-//        lift.motorLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorLift.setPower(0.4);
-//        currentState = States.INTAKE;
-//    }
-//
-//    public void HangTop() {
-//        lift.motorHang.setTargetPosition(-HANG_TOP_POS);
-//        lift.motorHang.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorHang.setPower(-0.4);
-//        currentState = States.HANG_TOP;
-//    }
-//
-//    public void HangAdjust() {
-//        lift.motorHang.setTargetPosition(-1000);
-//        lift.motorHang.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorHang.setPower(-1);
-//        currentState = States.HANG_ADJUST;
-//    }
-//
-//
-//    public void HangTopRev() {
-//        lift.motorHang.setTargetPosition(HANG_INIT_POS);
-//        lift.motorHang.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        lift.motorHang.setPower(0.4);
-//        currentState = States.HANG_TOP;
-//    }
-//
-//
-//}
